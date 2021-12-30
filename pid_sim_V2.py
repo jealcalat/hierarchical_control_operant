@@ -11,7 +11,7 @@ p["figure.figsize"] = 6, 2.5
 p["figure.facecolor"] = "#fff"
 p["axes.axisbelow"] = True
 p["axes.linewidth"] = 1
-p["axes.facecolor"] = "#FEFAF5"#f9f9f9"
+p["axes.facecolor"] = "#f9f9f9"
 p["axes.ymargin"] = 0.04
 p["axes.xmargin"] = 0.04
 
@@ -38,15 +38,14 @@ p["ytick.major.size"] = 5
 p["ytick.major.width"] = 1
 
 p["lines.linewidth"] = 1
-# p["lines.marker"] = "o"
-# p["lines.markeredgewidth"] = 1.5
 p["lines.markeredgecolor"] = "auto"
 p["lines.markerfacecolor"] = "white"
 p["lines.markersize"] = 1
-path_pid_diagram = "/home/mrrobot/Dropbox/2021B/JEAB_SNS_feedback/figure3.png"
+# change the path accordinggly
+path_pid_diagram = "<path-to-diagram-PID>/figure3.png"
 img = mpl.image.imread(path_pid_diagram)
 # %%
-
+# functions definition
 def axes_settings(fig, ax, title, xlab, ylab, leg_title, prop, xmult=10, ymult=0.5):
     ax.set_xlabel(xlab, fontsize=14)
     ax.set_ylabel(ylab)
@@ -72,7 +71,7 @@ def integral(λ, int_vect, trial):
     integrando = λ**(trial - length_int) * int_vect[length_int]
     return np.sum(integrando)
 
-
+# this function is used to produce figure 3 b and c
 def pid_control(Kp, Ki, Kd, dt, Time, sp):
     n = int(round(Time / dt))  # number of samples
     Int_vect = np.zeros(n + 1)
@@ -99,7 +98,7 @@ def pid_control(Kp, Ki, Kd, dt, Time, sp):
         FeedBack[i+1] = state2[i+1] + Output[i+1]
     return Output
 
-
+# this function is used to produce figure 3 d
 def pid_inter_animal(Kp, Ki, Kd, dt, Time, sp, λ):
     # initialization
     n = int(round(Time / dt)) # number of time-steps with a sampling interval dt
@@ -147,7 +146,7 @@ def pid_inter_animal(Kp, Ki, Kd, dt, Time, sp, λ):
     return Output[0:-1], disturbance[0:-1]
 
 
-# %% simulation
+# %% simulation of figure 3b and c
 Kd = [0.01, 0.5, 1.5]
 Ki = [0.1, 0.5, 1.5]
 Kp = 0.9
@@ -171,6 +170,7 @@ axes = fig.subplot_mosaic(mosaic)
 colores = [
     'orange', 'gray', 'red'
 ]
+# plot the diagram of PID, previously loaded in lines 45-46
 axes['A'].imshow(img)
 axes_settings(fig,
               axes['A'],
@@ -222,6 +222,7 @@ for ax in ['B', 'C']:
                       prop=prop,
                       xmult=15, ymult=1)
 
+# simulation of Bell and Pellis 2011, figure 3 d.
 dt = 0.01
 Time = 45
 n = int(round(Time / dt))
@@ -229,7 +230,7 @@ T = np.arange(0, Time, dt)
 sp = np.concatenate((np.ones(int(n/2)), np.ones(int(n/2))))
 Kd = 0.5
 Ki = 0.1
-
+# try different values of proportional gain
 Kp = [0.1, 0.25, 0.75]
 
 axes['D'].set_prop_cycle(cycler('color', ['r', 'k', 'orange']) +
@@ -262,12 +263,10 @@ axes_settings(fig,
               prop=prop,
               xmult=15, ymult=0.5)
 
-# fig.tight_layout()
-# fig.tight_layout(pad=0, h_pad=-0.5)
 fig.subplots_adjust(hspace=0.3)
 fig.savefig("pid_sim.pdf", dpi=600, bbox_inches='tight')
-# convert to png
-convert = 'convert -density 600 -trim pid_sim.pdf -quality 100 pid_sim.png'
+# convert to png (works in Linux natively; comment to avoid errors)
+# convert = 'convert -density 600 -trim pid_sim.pdf -quality 100 pid_sim.png'
 sys(convert)
 print(
     "Expected disturbance = %0.3f" % np.mean(dist)
@@ -275,6 +274,3 @@ print(
 print(
     "(Set-point - Expected disturbance) = %0.3f" % (1-np.mean(dist))
 )
-# %%
-
-# %%
