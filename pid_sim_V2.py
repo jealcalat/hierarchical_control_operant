@@ -6,14 +6,12 @@ import matplotlib as mpl
 from cycler import cycler
 prop = mpl.font_manager.FontProperties(family='serif')
 plt.rcParams["mathtext.fontset"] = "cm"
-# mpl.rcParams['text.usetex'] = True
-# mpl.rcParams['text.latex.preamble'] = [r'\usepackage(amsmath)']
 p = plt.rcParams
 p["figure.figsize"] = 6, 2.5
 p["figure.facecolor"] = "#fff"
 p["axes.axisbelow"] = True
 p["axes.linewidth"] = 1
-p["axes.facecolor"] = "#f9f9f9"
+p["axes.facecolor"] = "#FEFAF5"#f9f9f9"
 p["axes.ymargin"] = 0.04
 p["axes.xmargin"] = 0.04
 
@@ -39,12 +37,12 @@ p["ytick.direction"] = "out"
 p["ytick.major.size"] = 5
 p["ytick.major.width"] = 1
 
-# p["lines.linewidth"] = 1
-# # p["lines.marker"] = "o"
-# # p["lines.markeredgewidth"] = 1.5
-# p["lines.markeredgecolor"] = "auto"
-# p["lines.markerfacecolor"] = "white"
-# p["lines.markersize"] = 1
+p["lines.linewidth"] = 1
+# p["lines.marker"] = "o"
+# p["lines.markeredgewidth"] = 1.5
+p["lines.markeredgecolor"] = "auto"
+p["lines.markerfacecolor"] = "white"
+p["lines.markersize"] = 1
 path_pid_diagram = "/home/mrrobot/Dropbox/2021B/JEAB_SNS_feedback/figure3.png"
 img = mpl.image.imread(path_pid_diagram)
 # %%
@@ -67,7 +65,6 @@ def axes_settings(fig, ax, title, xlab, ylab, leg_title, prop, xmult=10, ymult=0
     ax.annotate(title.lower(),
                 xy=(-20, 7 + ax.bbox.height),
                 xycoords="axes pixels",fontsize=12, weight='bold') 
-                # 
 
 
 def integral(λ, int_vect, trial):
@@ -104,7 +101,8 @@ def pid_control(Kp, Ki, Kd, dt, Time, sp):
 
 
 def pid_inter_animal(Kp, Ki, Kd, dt, Time, sp, λ):
-    n = int(round(Time / dt))
+    # initialization
+    n = int(round(Time / dt)) # number of time-steps with a sampling interval dt
     Int_vect = np.zeros(n + 1)
     PID = np.zeros(n + 1)
     FeedBack = np.ones(n + 1)
@@ -115,21 +113,29 @@ def pid_inter_animal(Kp, Ki, Kd, dt, Time, sp, λ):
     STATE1 = np.zeros(n + 1)
     state2 = np.zeros(n + 1)
     STATE2 = np.zeros(n + 1)
+    # disturbance is the robber response
     disturbance = np.zeros(n + 1)
 
     for i in range(n):
-        # fraction
-        feed2 = np.random.uniform(0, 0.5, 1)
-        # feed2 = np.random.normal(0.25, 0.3, 1)
+        # sample λ2 from a uniform distribution
+        λ2 = np.random.uniform(0, 0.5, 1)
         # disturbance is the distance of the robber, a fraction of sp
-        disturbance[i] = sp[i] * feed2
+        disturbance[i] = sp[i] * λ2
+        # the error is the distance of the dodger minus the distance of the robber
         Error[i+1] = sp[i] - FeedBack[i] - disturbance[i]
+        # proportional, derivative and integral terms
         Prop = Error[i+1]
         Der = (Error[i+1] - Error[i]) / dt
         Int_vect[i+1] = (Error[i+1] + Error[i])*(dt/2)
+        # the integral as a discrete approximation with a exponentially
+        # decaying parameter λ
         I = integral(λ, Int_vect[:(i+1)], i+1)
+        # weighted sum of the three terms
         PID[i+1] = Kp * Prop + Ki * I + Kd * Der
-        STATE1[i+1] = np.sum(PID)
+        # here we simulate the dodger output as a change in state variables
+        # over time
+        a = PID[i+1]
+        STATE1[i+1] = np.sum(PID) + np.sign(a) * abs(a)**1.5
         state2[i+1] = (STATE1[i+1] + STATE1[i]) * dt / 2
         STATE2[i+1] = np.sum(state2)
         Output[i+1] = ((STATE2[i+1] + STATE2[i]) * dt/2)
