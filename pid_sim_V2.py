@@ -133,8 +133,7 @@ def pid_inter_animal(Kp, Ki, Kd, dt, Time, sp, λ):
         PID[i+1] = Kp * Prop + Ki * I + Kd * Der
         # here we simulate the dodger output as a change in state variables
         # over time
-        a = PID[i+1]
-        STATE1[i+1] = np.sum(PID) + np.sign(a) * abs(a)**1.5
+        STATE1[i+1] = np.sum(PID) 
         state2[i+1] = (STATE1[i+1] + STATE1[i]) * dt / 2
         STATE2[i+1] = np.sum(state2)
         Output[i+1] = ((STATE2[i+1] + STATE2[i]) * dt/2)
